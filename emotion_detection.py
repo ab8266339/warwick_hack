@@ -55,6 +55,7 @@ class EmotionDetection:
         # :::__init__:::
         set_all_paths()
         self.date_photo_emotion_dict = collections.defaultdict(lambda : collections.defaultdict(lambda :0))
+        self.date_text_emotion_dict = collections.defaultdict(lambda: collections.defaultdict(lambda: 0))
 
 
 
@@ -172,64 +173,102 @@ class EmotionDetection:
 
 
     def get_text_emotion_dict(self):
-        response = requests.post("https://japerk-text-processing.p.mashape.com/sentiment/",
-                                headers={
-                                    "X-Mashape-Key": "muMV4DdXyqmsh6hEQIryzApEFo4bp14Nb8ojsnQZdTCaEAUMxo",
-                                    "Content-Type": "application/x-www-form-urlencoded",
-                                    "Accept": "application/json"
-                                },
-                                params={
-                                    "language": "english",
-                                    "text": "great movie"
-                                }
-                                )
-        print(response.status_code)
+
+        texts_name_list = os.listdir(self.text_folder_path)
+        texts_path_list = [os.path.join(self.text_folder_path, x) for x in texts_name_list]
+        for text_file in texts_path_list:
+            with open(text_file, 'r', encoding = 'utf-8') as f:
+                date_str = re.findall(r'([0-9]+-[0-9]+-[0-9]+)#', f.name)[0]
+                print ("date_str :", date_str)
+                date_of_text_temp = time.strptime(date_str, '%Y-%m-%d')
+                date_of_text = datetime.datetime(*date_of_text_temp[:3])
+                date_object = datetime.date(year=date_of_text.year, month=date_of_text.month,
+                                              day=date_of_text.day)
+                text_content_list = f.readlines()
+                text_content = '.'.join(text_content_list)
+                text_content_re_list = re.findall(r'[A-Za-z]+', text_content)
+                text_content = '.'.join(text_content_re_list)[0:80000]
+                #print ('text_content: ', text_content)
+                request_dict = {}
+                request_dict['language'] = "english"
+                request_dict['text'] = text_content
+                response = requests.post("https://japerk-text-processing.p.mashape.com/sentiment/",
+                                        headers={
+                                            "X-Mashape-Key": "muMV4DdXyqmsh6hEQIryzApEFo4bp14Nb8ojsnQZdTCaEAUMxo",
+                                            "Content-Type": "application/x-www-form-urlencoded",
+                                            "Accept": "application/json"
+                                        },
+                                        data = request_dict
+                                        )
+                print(response.status_code)
+                response_dict = response.json()['probability']
+                response_dict['emotion_value'] = response_dict['pos'] - response_dict['neg']
+                print(response_dict)
+                if self.date_text_emotion_dict[date_object]:
+                    logger1.error("{} has mutilple copies".format(date_object))
+                self.date_text_emotion_dict[date_object] = response_dict
+        pp.pprint(self.date_text_emotion_dict)
+
+
+
+
+
 
     def plot_emotion_trend(self, mode = 'photo'):
-        sorted_date_photo_emotion_list = sorted(self.date_photo_emotion_dict.items(), key = lambda x:x[0])
-        date_list = [x[0] for x in sorted_date_photo_emotion_list]
-        anger_list = []
-        contempt_list = []
-        disgust_list = []
-        fear_list = []
-        happiness_list = []
-        neutral_list = []
-        sadness_list = []
-        surprise_list = []
-        # "anger"
-        # "contempt"
-        # "disgust"
-        # "fear"
-        # "happiness"
-        # "neutral"
-        # "sadness"
-        # "surprise"
-        for date, date_dict in sorted_date_photo_emotion_list:
-            anger_list.append(date_dict['dict']['anger'])
-            contempt_list.append(date_dict['dict']['contempt'])
-            disgust_list.append(date_dict['dict']['disgust'])
-            fear_list.append(date_dict['dict']['fear'])
-            happiness_list.append(date_dict['dict']['happiness'])
-            neutral_list.append(date_dict['dict']['neutral'])
-            sadness_list.append(date_dict['dict']['sadness'])
-            surprise_list.append(date_dict['dict']['surprise'])
+        if mode == 'photo':
+            sorted_date_photo_emotion_list = sorted(self.date_photo_emotion_dict.items(), key = lambda x:x[0])
+            date_list = [x[0] for x in sorted_date_photo_emotion_list]
+            anger_list = []
+            contempt_list = []
+            disgust_list = []
+            fear_list = []
+            happiness_list = []
+            neutral_list = []
+            sadness_list = []
+            surprise_list = []
+            # "anger"
+            # "contempt"
+            # "disgust"
+            # "fear"
+            # "happiness"
+            # "neutral"
+            # "sadness"
+            # "surprise"
+            for date, date_dict in sorted_date_photo_emotion_list:
+                anger_list.append(date_dict['dict']['anger'])
+                contempt_list.append(date_dict['dict']['contempt'])
+                disgust_list.append(date_dict['dict']['disgust'])
+                fear_list.append(date_dict['dict']['fear'])
+                happiness_list.append(date_dict['dict']['happiness'])
+                neutral_list.append(date_dict['dict']['neutral'])
+                sadness_list.append(date_dict['dict']['sadness'])
+                surprise_list.append(date_dict['dict']['surprise'])
 
-        # plot
-        plt.plot(date_list, anger_list, 'b-', label="anger")
-        plt.plot(date_list, contempt_list, 'g-', label="contempt")
-        plt.plot(date_list, disgust_list, 'r-', label="disgust")
-        plt.plot(date_list, fear_list, 'c-', label="fear")
-        plt.plot(date_list, happiness_list, 'm-', label="happiness")
-        plt.plot(date_list, neutral_list, 'y-', label="neutral")
-        plt.plot(date_list, sadness_list, 'k-', label="sadness")
-        plt.plot(date_list, surprise_list, 'w-', label="surprise")
-        plt.title('Emotion Trend')
-        plt.legend(loc=2)
-        path = os.path.join("result", 'emotion_trend.png')
-        plt.savefig(path)
-        plt.show()
-
-
+            # plot
+            plt.plot(date_list, anger_list, 'b-', label="anger")
+            plt.plot(date_list, contempt_list, 'g-', label="contempt")
+            plt.plot(date_list, disgust_list, 'r-', label="disgust")
+            plt.plot(date_list, fear_list, 'c-', label="fear")
+            plt.plot(date_list, happiness_list, 'm-', label="happiness")
+            plt.plot(date_list, neutral_list, 'y-', label="neutral")
+            plt.plot(date_list, sadness_list, 'k-', label="sadness")
+            plt.plot(date_list, surprise_list, 'w-', label="surprise")
+            plt.title('Photo Emotion Trend')
+            plt.legend(loc=2)
+            path = os.path.join("result", 'photo_emotion_trend.png')
+            plt.savefig(path)
+            plt.show()
+        elif mode == 'text':
+            sorted_date_text_emotion_list = sorted(self.date_text_emotion_dict.items(), key=lambda x: x[0])
+            date_list = [x[0] for x in sorted_date_text_emotion_list]
+            emotion_value_list = [x[1]['emotion_value'] for x in sorted_date_text_emotion_list]
+            emotion_value_list = [float("{:.2f}".format(x)) for x in emotion_value_list]
+            plt.plot(date_list, emotion_value_list, 'ro', label="anger")
+            plt.title('Text Emotion Trend')
+            plt.legend(loc=2)
+            path = os.path.join("result", 'text_emotion_trend.png')
+            plt.savefig(path)
+            plt.show()
 
 
 
