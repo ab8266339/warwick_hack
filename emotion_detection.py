@@ -37,21 +37,6 @@ class EmotionDetection:
              # image(output)
              self.image_output_folder_path = os.path.join(current_path, 'result', 'image')
 
-        self.headers = {
-             # Basic Authorization Sample
-             'Content-type': 'application/octet-stream',
-             'Ocp-Apim-Subscription-Key': '27e26524b06b41caa2ff561da9620b5c',
-          }
-
-        self.params = urllib.parse.urlencode({
-             ## Specify your subscription key
-             # 'subscription-key': '',
-             ## Specify values for optional parameters, as needed
-             # 'analyzesFaceLandmarks': 'false',
-             # 'analyzesAge': 'false',
-             # 'analyzesGender': 'false',
-             # 'analyzesHeadPose': 'false',
-          })
 
         # :::__init__:::
         set_all_paths()
@@ -63,11 +48,11 @@ class EmotionDetection:
 
 
     def get_emotion_dict(self, file_path):
-
+        # 0f85da3c79394b2887291025758afa94, e1fc0e40c7464cebbc63317c3b0f5b26
         headers = {
             # Basic Authorization Sample
             'Content-type': 'application/octet-stream',
-            'Ocp-Apim-Subscription-Key': '27e26524b06b41caa2ff561da9620b5c',
+            'Ocp-Apim-Subscription-Key': 'e1fc0e40c7464cebbc63317c3b0f5b26',
         }
 
         params = urllib.parse.urlencode({
@@ -89,6 +74,7 @@ class EmotionDetection:
             print("send request")
             response = conn.getresponse()
             data = response.read().decode('utf-8')
+            print("data: ", data)
             json_obj = json.loads(data)[0]
             conn.close()
         except IndexError:
@@ -265,25 +251,43 @@ class EmotionDetection:
                 surprise_list.append(date_dict['dict']['surprise'])
 
             # plot
+            my_dpi = 96
+            # set size
+            fig = plt.figure(figsize=(1024/my_dpi, 768/my_dpi), dpi=my_dpi)
+            ax = plt.subplot(111)
             print ("anger_list: ", anger_list)
-            plt.plot(date_list, anger_list, 'rx', label="anger")
+            ax.plot(date_list, anger_list, 'rx', label="anger")
             #plt.plot(date_list, contempt_list, 'gx', label="contempt")
             #plt.plot(date_list, disgust_list, 'rx', label="disgust")
-            plt.plot(date_list, fear_list, 'kx', label="fear")
-            plt.plot(date_list, happiness_list, 'yo', label="happiness")
+            ax.plot(date_list, fear_list, 'kx', label="fear")
+            ax.plot(date_list, happiness_list, 'yo', label="happiness")
             #plt.plot(date_list, neutral_list, 'yx', label="neutral")
-            plt.plot(date_list, sadness_list, 'bo', label="sadness")
-            plt.plot(date_list, surprise_list, 'co', label="surprise")
-            plt.title('Photo Emotion Trend')
-            #plt.legend(loc=2)
-            #plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+            ax.plot(date_list, sadness_list, 'bo', label="sadness")
+            ax.plot(date_list, surprise_list, 'co', label="surprise")
+            ax.set_title('Photo Emotion Trend, from:{} to {}'.format(date_list[0], date_list[-1]))
+            # figure size
+            box = ax.get_position()
+            ax.set_position([box.x0, box.y0, box.width * 0.6, box.height])
+            ax.legend(loc='lower center', bbox_to_anchor=(0.5, -0.29))
             plt.gcf().autofmt_xdate()
+            # x axes invisible
+            date_list_len = len(date_list)
+            if date_list_len > 35:
+                frame1 = plt.gca()
+                frame1.axes.get_xaxis().set_visible(False)
+            #
             path = os.path.join("result", 'photo_emotion_trend.png')
-            plt.savefig(path)
+            fig.savefig(path, dpi=my_dpi)
+            # full screen
+            mng = plt.get_current_fig_manager()
+            mng.full_screen_toggle()
             plt.show()
+
+
         elif mode == 'text':
             sorted_date_text_emotion_list = sorted(self.date_text_emotion_dict.items(), key=lambda x: x[0])
-            date_list = [x[0] for x in sorted_date_text_emotion_list]
+            date_list = [x[0] for x in sorted_date_text_emotion_list].copy()
+            print ("date_list: ", date_list)
             emotion_value_list = [x[1]['emotion_value'] for x in sorted_date_text_emotion_list]
             emotion_value_list = [float("{:.2f}".format(x)) for x in emotion_value_list]
             pos_emotion_value_list = []
@@ -298,13 +302,29 @@ class EmotionDetection:
                 if x < 0:
                     neg_emotion_value_list.append(x)
                     neg_emotion_x_list.append(date_list[i])
-            plt.plot(pos_emotion_x_list, pos_emotion_value_list, 'go', label="degree of pos")
-            plt.plot(neg_emotion_x_list, neg_emotion_value_list, 'ro', label="degree of neg")
-            plt.title('Text Emotion Trend')
-            plt.legend(loc=2)
+
+            # plt
+            my_dpi = 96
+            fig = plt.figure(figsize=(1024/my_dpi, 768/my_dpi), dpi=my_dpi)
+            ax = plt.subplot(111)
+            ax.plot(pos_emotion_x_list, pos_emotion_value_list, 'go', label="degree of pos")
+            ax.plot(neg_emotion_x_list, neg_emotion_value_list, 'ro', label="degree of neg")
+            ax.set_title('Text Emotion Trend from:{} to {}'.format(date_list[0], date_list[-1]))
+            box = ax.get_position()
+            ax.set_position([box.x0, box.y0, box.width * 0.6, box.height])
+            ax.legend(loc='lower center', bbox_to_anchor=(0.5, -0.29))
             plt.gcf().autofmt_xdate()
             path = os.path.join("result", 'text_emotion_trend.png')
-            plt.savefig(path)
+            # x axes invisible
+            date_list_len = len(date_list)
+            if date_list_len > 35:
+                frame1 = plt.gca()
+                frame1.axes.get_xaxis().set_visible(False)
+            # save
+            fig.savefig(path, dpi=my_dpi)
+            # full screen
+            mng = plt.get_current_fig_manager()
+            mng.full_screen_toggle()
             plt.show()
 
 
