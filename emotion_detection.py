@@ -201,23 +201,36 @@ class EmotionDetection:
 
 
     def get_month_data_dict(self):
+        print("---------------------------------get_month_data_dict")
         for date_object, content_list in self.raw_data_dict.items():
             content_str = '\n'.join(content_list)
             self.month_raw_data_dict[date_object] += content_str
+        print (self.month_raw_data_dict)
 
 
     def write_month_data(self):
+        print ("---------------------------------write_month_data")
         output_folder_path = os.path.join(self.current_path, 'PJS_wordcloud', 'input_raw_txt')
         output_folder_path2 = os.path.join(self.current_path, 'PJS_wordcloud',
                                            'generate_tfidf', 'raw_doc_for_tfidf')
-        for date_object, month_data in self.month_raw_data_dict.items():
-            file_name = "{}-{}-{}#.txt".format(date_object.year, date_object.month, date_object.day)
-            file_path = os.path.join(output_folder_path, file_name)
-            file_path2 = os.path.join(output_folder_path2, file_name)
-            with open(file_path, 'w', encoding='utf-8') as f:
-                f.write(month_data)
-            with open(file_path2, 'w', encoding='utf-8') as f:
-                f.write(month_data)
+
+        input_text_folder = os.path.join(self.current_path, 'text')
+        file_name_list = os.listdir(input_text_folder)
+        file_name_path_list = [os.path.join(input_text_folder, x) for x in file_name_list]
+        for file_path in file_name_path_list:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                month_data = ''.join(f.readlines())
+                file_name = re.findall(r'([0-9]+-[0-9]+-[0-9]+#.*.txt)', file_path)[0]
+                print ("file_name: ", file_name)
+                file_path = os.path.join(output_folder_path, file_name)
+                file_path2 = os.path.join(output_folder_path2, file_name)
+
+                with open(file_path, 'w', encoding='utf-8') as f:
+                    print(file_path)
+                    f.write(month_data)
+                with open(file_path2, 'w', encoding='utf-8') as f:
+                    print(file_path2)
+                    f.write(month_data)
 
     def plot_emotion_trend(self, mode = 'photo'):
         if mode == 'photo':
