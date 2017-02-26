@@ -202,17 +202,16 @@ class EmotionDetection:
 
     def get_month_data_dict(self):
         for date_object, content_list in self.raw_data_dict.items():
-            month_now = date_object.month
             content_str = '\n'.join(content_list)
-            self.month_raw_data_dict[month_now] += content_str
+            self.month_raw_data_dict[date_object] += content_str
 
 
     def write_month_data(self):
         output_folder_path = os.path.join(self.current_path, 'PJS_wordcloud', 'input_raw_txt')
         output_folder_path2 = os.path.join(self.current_path, 'PJS_wordcloud',
                                            'generate_tfidf', 'raw_doc_for_tfidf')
-        for month, month_data in self.month_raw_data_dict.items():
-            file_name = str(month) + '#' + '.txt'
+        for date_object, month_data in self.month_raw_data_dict.items():
+            file_name = "{}-{}-{}#.txt".format(date_object.year, date_object.month, date_object.day)
             file_path = os.path.join(output_folder_path, file_name)
             file_path2 = os.path.join(output_folder_path2, file_name)
             with open(file_path, 'w', encoding='utf-8') as f:
@@ -256,14 +255,14 @@ class EmotionDetection:
             fig = plt.figure(figsize=(1024/my_dpi, 768/my_dpi), dpi=my_dpi)
             ax = plt.subplot(111)
             print ("anger_list: ", anger_list)
-            ax.plot(date_list, anger_list, 'rx', label="anger")
+            ax.plot(date_list, anger_list, 'ro', label="anger")
             #plt.plot(date_list, contempt_list, 'gx', label="contempt")
             #plt.plot(date_list, disgust_list, 'rx', label="disgust")
-            ax.plot(date_list, fear_list, 'kx', label="fear")
-            ax.plot(date_list, happiness_list, 'yo', label="happiness")
+            ax.plot(date_list, fear_list, 'r^', label="fear")
+            ax.plot(date_list, happiness_list, 'go', label="happiness")
             #plt.plot(date_list, neutral_list, 'yx', label="neutral")
-            ax.plot(date_list, sadness_list, 'bo', label="sadness")
-            ax.plot(date_list, surprise_list, 'co', label="surprise")
+            ax.plot(date_list, sadness_list, 'rv', label="sadness")
+            ax.plot(date_list, surprise_list, 'gD', label="surprise")
             ax.set_title('Photo Emotion Trend, from:{} to {}'.format(date_list[0], date_list[-1]))
             # figure size
             box = ax.get_position()

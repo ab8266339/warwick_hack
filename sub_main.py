@@ -36,7 +36,7 @@ word_cloud__path = os.path.join(word_cloud_folder, 'simple_wordcloud.py')
 #:::RUN:::
 #(1.) formatter
 run_python(main__path)
-# run_python(generate_tf_idf__path)
-# run_python(word_cloud__path)
+run_python(generate_tf_idf__path)
+run_python(word_cloud__path)
 
 

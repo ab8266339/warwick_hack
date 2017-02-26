@@ -208,27 +208,35 @@ output_pic_folder = os.path.join(parent_folder, 'result', 'word_cloud')
 delete_folder_files(output_pic_folder)
 
 for file_name in file_name_list:
-    file_base_name = re.findall(r'([0-9]+)#', file_name)
-    if not file_base_name:
+    #print ("file_name_list: ", file_name_list)
+    file_base_name_list = re.findall(r'([0-9]+-[0-9]+-[0-9]+)#', file_name)
+    file_base_name = file_name
+    if not file_base_name_list:
         continue
     else:
-        file_base_name = file_base_name[0]
-    month = month_list[int(file_base_name)]
+        file_base_name_str = file_base_name_list[0]
+
+    file_base_name_list = file_base_name_str.split('-')
+    month_order = int(file_base_name_list[1])
+    month = month_list[month_order]
+    day = file_base_name_list[2]
+    year = file_base_name_list[0]
+    file_name = month + '_' + year
     # reset the output path
 
     ## old code
-    wordcloud1 = PJS_wordcloud(cmdline_dict, parameter_path = parameter_path, doc_name = file_name[:-4])
+    wordcloud1 = PJS_wordcloud(cmdline_dict, parameter_path = parameter_path, doc_name = file_base_name[:-4])
     
     
-    wordcloud1.output_pic_path = os.path.join(output_pic_folder, month + '.png')
-    wordcloud1.sorted_dic_output_path = os.path.join(output_pic_folder, 'sorted_output_' + month + '.txt')
+    wordcloud1.output_pic_path = os.path.join(output_pic_folder, file_name + '.png')
+    wordcloud1.sorted_dic_output_path = os.path.join(output_pic_folder, 'sorted_output_' + file_name + '.txt')
     
     raw_word_list = wordcloud1.get_raw_word_list()
     word_frequency_dict = wordcloud1.get_word_frequency_dict(raw_word_list)
     wordcloud1.output_pic(word_frequency_dict.items(), is_display = False)
     wordcloud1.write_sorted_tf_dict_to_file(word_frequency_dict)
     print("----------------------------------------------------------------------------")
-    print ("Built {} wordcloud successfully!".format(month))
+    print ("Built {} {} wordcloud successfully!".format(day, month))
     #old code end
 #
 

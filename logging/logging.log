@@ -140,3 +140,16 @@
 2017-02-26 08:47:43,011 - logger1 - INFO - C:\Users\PJS\Desktop\warwick_hack\face\disgust1.jpg key Error! Maybe too big or too small
 2017-02-26 08:57:18,368 - logger1 - INFO - C:\Users\PJS\Desktop\warwick_hack\face\2016-Ford-Mustang-GT-burnout-red-tire-smoke.jpg does not contain any faces
 2017-02-26 08:57:46,726 - logger1 - INFO - C:\Users\PJS\Desktop\warwick_hack\face\2016-Ford-Mustang-GT-burnout-red-tire-smoke.jpg does not contain any faces
+2017-02-26 09:44:28,051 - logger1 - ERROR - 2015-04-30 has mutilple copies
+2017-02-26 09:50:27,170 - logger1 - ERROR - 2017-02-25 has mutilple copies
+2017-02-26 09:58:52,370 - logger1 - ERROR - photo in C:\Users\PJS\Desktop\warwick_hack\face\151108012844-best-of-trump-on-snl-thumbnail-super-169.png has no meta data of digitized time!
+2017-02-26 09:59:03,263 - logger1 - INFO - C:\Users\PJS\Desktop\warwick_hack\face\160810170046-trump-quote-eight-muslims-super-169.jpg does not contain any faces
+2017-02-26 09:59:09,515 - logger1 - ERROR - photo in C:\Users\PJS\Desktop\warwick_hack\face\2-format2101.png has no meta data of digitized time!
+2017-02-26 09:59:35,507 - logger1 - ERROR - photo in C:\Users\PJS\Desktop\warwick_hack\face\Donald-Trump-2-credit-Gage-Skidmore.jpg has no meta data of digitized time!
+2017-02-26 09:59:49,185 - logger1 - ERROR - photo in C:\Users\PJS\Desktop\warwick_hack\face\donald_trump120.jpg has no meta data of digitized time!
+2017-02-26 09:59:49,187 - logger1 - ERROR - photo in C:\Users\PJS\Desktop\warwick_hack\face\donald_trump197-620x412.jpg has no meta data of digitized time!
+2017-02-26 09:59:49,188 - logger1 - ERROR - photo in C:\Users\PJS\Desktop\warwick_hack\face\donald_trump47-620x412.jpg has no meta data of digitized time!
+2017-02-26 10:00:00,943 - logger1 - ERROR - photo in C:\Users\PJS\Desktop\warwick_hack\face\GOP-2016-Trump101-1763x1254.jpeg has no meta data of digitized time!
+2017-02-26 10:00:12,435 - logger1 - ERROR - photo in C:\Users\PJS\Desktop\warwick_hack\face\o-DONALD-TRUMP-facebook.jpg has no meta data of digitized time!
+2017-02-26 10:00:12,436 - logger1 - ERROR - photo in C:\Users\PJS\Desktop\warwick_hack\face\o-DONALD-TRUMP-TOM-TANCREDO-facebook.jpg has no meta data of digitized time!
+2017-02-26 10:25:23,856 - logger1 - ERROR - 2015-04-30 has mutilple copies

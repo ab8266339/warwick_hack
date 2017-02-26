@@ -33,8 +33,15 @@ def read_trump():
                 date_object = datetime.datetime(*date_object_temp[:3])
 
                 other_str = re.subn(r'(@[A-Za-z_0-9:]+)?','', other_str)[0]
-                other_str = re.subn(r'(\[[A-Za-z ]+\]+)?','', other_str)[0]
+                other_str = re.subn(r'(\[[A-Za-z ]+\])?','', other_str)[0]
                 other_str = re.subn(r'(http[:\/\.A-Za-z0-9]+ )?','', other_str)[0]
+                other_str = re.subn(r'(http[:\/\.A-Za-z0-9]+\")?', '', other_str)[0]
+                other_str = re.subn(r'(#[A-Za-z0-9]+ )?', '', other_str)[0]
+                other_str = re.subn(r'(#[A-Za-z0-9]+\")?', '', other_str)[0]
+                other_str = re.subn(r'(#[A-Za-z0-9]+\.)?', '', other_str)[0]
+                other_str = re.subn(r'(#[A-Za-z0-9]+\!)?', '', other_str)[0]
+                other_str = re.subn(r'(#[A-Za-z0-9]+\?)?', '', other_str)[0]
+                other_str = re.subn(r'(#[A-Za-z0-9]+\,)?', '', other_str)[0]
                 other_str = re.subn(r'AM', '', other_str)[0]
                 other_str = re.subn(r'PM', '', other_str)[0]
                 trump_date_dict[date_object] += other_str
@@ -46,5 +53,6 @@ def read_trump():
         file_path = os.path.join(file_folder_path, date_str_file_name)
         with open (file_path, 'w', encoding = 'utf-8') as f:
             f.write(trump_twitter)
+            print ("Clean data succesful, write new data to file: {}".format(date_str_file_name))
 
 read_trump()
