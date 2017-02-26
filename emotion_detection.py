@@ -1,6 +1,18 @@
+from pjslib.logger import logger1
+#
 import os,http, http.client, urllib.request, urllib.parse, urllib.error, base64
 import pprint
 import os
+import json
+import collections
+import PIL.Image
+import exifread
+import datetime
+import time
+import re
+import sys
+import requests
+import matplotlib.pyplot as plt
 pp = pprint.PrettyPrinter(indent=4)
 
 class EmotionDetection:
@@ -42,12 +54,180 @@ class EmotionDetection:
 
         # :::__init__:::
         set_all_paths()
-
-    def get_emotion_dict(self):
-        pass
+        self.date_photo_emotion_dict = collections.defaultdict(lambda : collections.defaultdict(lambda :0))
 
 
 
+    def get_emotion_dict(self, file_path):
+
+        headers = {
+            # Basic Authorization Sample
+            'Content-type': 'application/octet-stream',
+            'Ocp-Apim-Subscription-Key': '27e26524b06b41caa2ff561da9620b5c',
+        }
+
+        params = urllib.parse.urlencode({
+            ## Specify your subscription key
+            # 'subscription-key': '',
+            ## Specify values for optional parameters, as needed
+            # 'analyzesFaceLandmarks': 'false',
+            # 'analyzesAge': 'false',
+            # 'analyzesGender': 'false',
+            # 'analyzesHeadPose': 'false',
+        })
+
+        file = open(file_path, "rb").read()
+
+
+        try:
+            conn = http.client.HTTPSConnection('westus.api.cognitive.microsoft.com')
+            conn.request("POST", "/emotion/v1.0/recognize?%s" % params, file, headers)
+            print("send request")
+            response = conn.getresponse()
+            data = response.read().decode('utf-8')
+            json_obj = json.loads(data)[0]
+            conn.close()
+        except IndexError:
+            logger1.info("{} does not contain any faces".format(file_path))
+            return None
+        except KeyError:
+            logger1.info("{} key Error! Maybe too big or too small".format(file_path))
+            return None
+        except:
+            logger1.error("Unexpected error:", sys.exc_info()[0])
+            raise
+            return None
+
+        return json_obj
+
+
+    def get_photo_emotion_dict(self):
+        def add_dicts_value(dict1, dict2):
+            if len(dict1) != len(dict2):
+                logger1.error("Emotion list do not have the same length!")
+                sys.exit()
+            """Adding the values of the 2 dicts with the same key"""
+            for key, value in dict2.items():
+                dict1[key] += dict2[key]
+            return dict1
+
+
+
+        # ::: get_photo_emotion_dict
+        photo_folder_list = os.listdir(self.face_folder_path)
+        photo_folder_list = [os.path.join(self.face_folder_path, x) for x in photo_folder_list]
+        print ("photo_folder_list", photo_folder_list)
+        for photo_file_path in photo_folder_list:
+            # days_ago =
+            f = open(photo_file_path, 'rb')
+            # Return Exif tags
+            tags = exifread.process_file(f)
+            print (type(tags))
+            print(tags)
+            print(tags.keys())
+            try:
+                date_of_photo = tags['EXIF DateTimeDigitized']
+            except KeyError:
+                logger1.error("photo in {} has no meta data of digitized time!".format(photo_file_path))
+                continue
+            # convert to str,
+            date_of_photo = str(date_of_photo)
+            # convert str to date object
+
+
+            # date_of_photo = 2017:02:01
+            date_of_photo = re.findall(r'([0-9]+:[0-9]+:[0-9]+)', date_of_photo)[0]
+            date_of_photo_temp = time.strptime(date_of_photo, '%Y:%m:%d')
+            date_of_photo = datetime.datetime(*date_of_photo_temp[:3])
+            date_of_photo = datetime.date(year = date_of_photo.year, month = date_of_photo.month,
+                                          day = date_of_photo.day)
+            print("date_of_photo", date_of_photo, type(date_of_photo))
+
+            photo_emotion_dict = self.get_emotion_dict(photo_file_path)
+            if photo_emotion_dict:
+                print ("photo_emotion_dict: ", photo_emotion_dict)
+                photo_emotion_dict = photo_emotion_dict['scores']
+            else:
+                continue
+            pp.pprint(photo_emotion_dict)
+            pp.pprint(type(photo_emotion_dict))
+
+            if self.date_photo_emotion_dict[date_of_photo]['dict']:
+                self.date_photo_emotion_dict[date_of_photo]['dict'] = add_dicts_value(
+                    self.date_photo_emotion_dict[date_of_photo]['dict'], photo_emotion_dict)
+            else:
+                self.date_photo_emotion_dict[date_of_photo]['dict'] = photo_emotion_dict
+
+            self.date_photo_emotion_dict[date_of_photo]['dict_num'] += 1
+
+        # compute the average of date_photo_emotion_dict
+        for date, date_dict in self.date_photo_emotion_dict.items():
+            dict_num = date_dict['dict_num']
+            for emotion, emotion_value in self.date_photo_emotion_dict[date]['dict'].items():
+                emotion_value /= dict_num
+                self.date_photo_emotion_dict[date]['dict'][emotion] = float("{:.3f}".format(emotion_value))
+        pp.pprint(self.date_photo_emotion_dict)
+
+
+
+
+    def get_text_emotion_dict(self):
+        response = requests.post("https://japerk-text-processing.p.mashape.com/sentiment/",
+                                headers={
+                                    "X-Mashape-Key": "muMV4DdXyqmsh6hEQIryzApEFo4bp14Nb8ojsnQZdTCaEAUMxo",
+                                    "Content-Type": "application/x-www-form-urlencoded",
+                                    "Accept": "application/json"
+                                },
+                                params={
+                                    "language": "english",
+                                    "text": "great movie"
+                                }
+                                )
+        print(response.status_code)
+
+    def plot_emotion_trend(self, mode = 'photo'):
+        sorted_date_photo_emotion_list = sorted(self.date_photo_emotion_dict.items(), key = lambda x:x[0])
+        date_list = [x[0] for x in sorted_date_photo_emotion_list]
+        anger_list = []
+        contempt_list = []
+        disgust_list = []
+        fear_list = []
+        happiness_list = []
+        neutral_list = []
+        sadness_list = []
+        surprise_list = []
+        # "anger"
+        # "contempt"
+        # "disgust"
+        # "fear"
+        # "happiness"
+        # "neutral"
+        # "sadness"
+        # "surprise"
+        for date, date_dict in sorted_date_photo_emotion_list:
+            anger_list.append(date_dict['dict']['anger'])
+            contempt_list.append(date_dict['dict']['contempt'])
+            disgust_list.append(date_dict['dict']['disgust'])
+            fear_list.append(date_dict['dict']['fear'])
+            happiness_list.append(date_dict['dict']['happiness'])
+            neutral_list.append(date_dict['dict']['neutral'])
+            sadness_list.append(date_dict['dict']['sadness'])
+            surprise_list.append(date_dict['dict']['surprise'])
+
+        # plot
+        plt.plot(date_list, anger_list, 'b-', label="anger")
+        plt.plot(date_list, contempt_list, 'g-', label="contempt")
+        plt.plot(date_list, disgust_list, 'r-', label="disgust")
+        plt.plot(date_list, fear_list, 'c-', label="fear")
+        plt.plot(date_list, happiness_list, 'm-', label="happiness")
+        plt.plot(date_list, neutral_list, 'y-', label="neutral")
+        plt.plot(date_list, sadness_list, 'k-', label="sadness")
+        plt.plot(date_list, surprise_list, 'w-', label="surprise")
+        plt.title('Emotion Trend')
+        plt.legend(loc=2)
+        path = os.path.join("result", 'emotion_trend.png')
+        plt.savefig(path)
+        plt.show()
 
 
 
@@ -60,32 +240,3 @@ class EmotionDetection:
 
 
 
-
-headers = {
-   # Basic Authorization Sample
-   'Content-type': 'application/octet-stream',
-   'Ocp-Apim-Subscription-Key': '27e26524b06b41caa2ff561da9620b5c',
-}
-
-params = urllib.parse.urlencode({
-   ## Specify your subscription key
-   # 'subscription-key': '',
-   ## Specify values for optional parameters, as needed
-   # 'analyzesFaceLandmarks': 'false',
-   # 'analyzesAge': 'false',
-   # 'analyzesGender': 'false',
-   # 'analyzesHeadPose': 'false',
-})
-
-file = open('face/recognition1.jpg', "rb").read()
-
-try:
-   conn = http.client.HTTPSConnection('westus.api.cognitive.microsoft.com')
-   conn.request("POST", "/emotion/v1.0/recognize?%s" % params, file, headers)
-   print("send request")
-   response = conn.getresponse()
-   data = response.json()
-   pp.pprint(data)
-   conn.close()
-except Exception as e:
-   print("[Errno {0}] {1}".format(e.errno, e.strerror))
