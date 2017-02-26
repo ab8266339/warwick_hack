@@ -20,6 +20,7 @@ class EmotionDetection:
     def __init__(self):
         def set_all_paths():
              current_path = os.path.dirname(os.path.abspath(__file__))
+             self.current_path = current_path
              face_folder_name = 'face'
              text_folder_name = 'text'
              archives_name = 'archives'
@@ -56,6 +57,8 @@ class EmotionDetection:
         set_all_paths()
         self.date_photo_emotion_dict = collections.defaultdict(lambda : collections.defaultdict(lambda :0))
         self.date_text_emotion_dict = collections.defaultdict(lambda: collections.defaultdict(lambda: 0))
+        self.raw_data_dict = collections.defaultdict(lambda: [])
+        self.month_raw_data_dict = collections.defaultdict(lambda: '')
 
 
 
@@ -207,12 +210,31 @@ class EmotionDetection:
                 if self.date_text_emotion_dict[date_object]:
                     logger1.error("{} has mutilple copies".format(date_object))
                 self.date_text_emotion_dict[date_object] = response_dict
+                # add raw txt data to dict and create new file
+                self.raw_data_dict[date_object].append(text_content)
+
         pp.pprint(self.date_text_emotion_dict)
 
 
+    def get_month_data_dict(self):
+        for date_object, content_list in self.raw_data_dict.items():
+            month_now = date_object.month
+            content_str = '\n'.join(content_list)
+            self.month_raw_data_dict[month_now] += content_str
 
 
-
+    def write_month_data(self):
+        output_folder_path = os.path.join(self.current_path, 'PJS_wordcloud', 'input_raw_txt')
+        output_folder_path2 = os.path.join(self.current_path, 'PJS_wordcloud',
+                                           'generate_tfidf', 'raw_doc_for_tfidf')
+        for month, month_data in self.month_raw_data_dict.items():
+            file_name = str(month) + '#' + '.txt'
+            file_path = os.path.join(output_folder_path, file_name)
+            file_path2 = os.path.join(output_folder_path2, file_name)
+            with open(file_path, 'w', encoding='utf-8') as f:
+                f.write(month_data)
+            with open(file_path2, 'w', encoding='utf-8') as f:
+                f.write(month_data)
 
     def plot_emotion_trend(self, mode = 'photo'):
         if mode == 'photo':
@@ -245,16 +267,17 @@ class EmotionDetection:
                 surprise_list.append(date_dict['dict']['surprise'])
 
             # plot
-            plt.plot(date_list, anger_list, 'b-', label="anger")
-            plt.plot(date_list, contempt_list, 'g-', label="contempt")
-            plt.plot(date_list, disgust_list, 'r-', label="disgust")
-            plt.plot(date_list, fear_list, 'c-', label="fear")
-            plt.plot(date_list, happiness_list, 'm-', label="happiness")
-            plt.plot(date_list, neutral_list, 'y-', label="neutral")
-            plt.plot(date_list, sadness_list, 'k-', label="sadness")
-            plt.plot(date_list, surprise_list, 'w-', label="surprise")
+            plt.plot(date_list, anger_list, 'bo', label="anger")
+            plt.plot(date_list, contempt_list, 'gx', label="contempt")
+            plt.plot(date_list, disgust_list, 'rx', label="disgust")
+            plt.plot(date_list, fear_list, 'co', label="fear")
+            plt.plot(date_list, happiness_list, 'mo', label="happiness")
+            plt.plot(date_list, neutral_list, 'yx', label="neutral")
+            plt.plot(date_list, sadness_list, 'ko', label="sadness")
+            plt.plot(date_list, surprise_list, 'wx', label="surprise")
             plt.title('Photo Emotion Trend')
             plt.legend(loc=2)
+            plt.gcf().autofmt_xdate()
             path = os.path.join("result", 'photo_emotion_trend.png')
             plt.savefig(path)
             plt.show()
@@ -263,9 +286,10 @@ class EmotionDetection:
             date_list = [x[0] for x in sorted_date_text_emotion_list]
             emotion_value_list = [x[1]['emotion_value'] for x in sorted_date_text_emotion_list]
             emotion_value_list = [float("{:.2f}".format(x)) for x in emotion_value_list]
-            plt.plot(date_list, emotion_value_list, 'ro', label="anger")
+            plt.plot(date_list, emotion_value_list, 'ro', label="degree of pos/neg")
             plt.title('Text Emotion Trend')
             plt.legend(loc=2)
+            plt.gcf().autofmt_xdate()
             path = os.path.join("result", 'text_emotion_trend.png')
             plt.savefig(path)
             plt.show()

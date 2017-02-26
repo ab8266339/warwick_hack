@@ -1,10 +1,21 @@
 #!/usr/bin/env python2
+def find_upper_level_folder_path(num, path = ''):
+    if not path:
+        path = os.path.dirname(os.path.abspath(__file__))
+    else:
+        path = os.path.dirname(path)
+    num -= 1
+    if num > 0:
+        return find_upper_level_folder_path(num, path = path)
+    else:
+        return path
+
 """
 Simple wordcloud generator with basic functions
 Author: PJS
 Update: 2016-12-20
 """
-from __future__ import unicode_literals
+#from __future__ import unicode_literals
 import os, sys
 import re
 import numpy as np
@@ -22,13 +33,14 @@ import random
 import json
 
 class PJS_wordcloud():
-    def __init__(self, cmdline_dict, parameter_path = 'wordcloud_parameters.json'):
+    def __init__(self, cmdline_dict, parameter_path = 'wordcloud_parameters.json', doc_name=''):
         # future use
         self.cmdline_dict = cmdline_dict
         with open(parameter_path, 'r', encoding = 'utf-8') as f:
             main_parameter_dict = json.load(f)
         # Only accept txt，use ANSI decode?
-        doc_name = main_parameter_dict['general']['doc_name']
+        if not doc_name:
+            doc_name = main_parameter_dict['general']['doc_name']
         pic_name = main_parameter_dict['general']['pic_name']
         language = main_parameter_dict['general']['language']
         self.language = main_parameter_dict['general']['language']
@@ -36,6 +48,7 @@ class PJS_wordcloud():
         self.parameter_dict = main_parameter_dict['wordcloud']
         
         current_path = os.path.dirname(os.path.abspath(__file__))
+        self.current_path = current_path
         self.doc_path = os.path.join(current_path, 'input_raw_txt', doc_name + '.txt')
         self.sorted_dic_output_path = os.path.join(current_path, 'output', 'sorted_output_' + doc_name + '.txt')
         #PIC
@@ -69,7 +82,7 @@ class PJS_wordcloud():
             self.TFIDF_MODE = False
            
         
-    def output_pic(self, word_frequency_list):
+    def output_pic(self, word_frequency_list, is_display = True):
         
         def create_wordcloud():
             margin = self.parameter_dict['margin']
@@ -105,7 +118,7 @@ class PJS_wordcloud():
 
             
         def pic_output(wordcloud):
-            print ('self.output_pic_path: ', self.output_pic_path)
+            #print ('self.output_pic_path: ', self.output_pic_path)
             wordcloud.to_file(self.output_pic_path)
             
 
@@ -116,10 +129,11 @@ class PJS_wordcloud():
         create_wordcloud()
         # mask_pic initialize
         wordcloud = self.wordcloud
-        if self.PIC_MODE:
-            mask_pic_display(wordcloud)
-        elif self.NORMAL_MODE:
-            normal_pic_display(wordcloud)
+        if is_display:
+            if self.PIC_MODE:
+                mask_pic_display(wordcloud)
+            elif self.NORMAL_MODE:
+                normal_pic_display(wordcloud)
         # write pic to file
         pic_output(wordcloud)
         
@@ -166,12 +180,59 @@ class PJS_wordcloud():
 cmdline_dict = CommandLine.CommandLineInputInfo()
 parameter_path = 'wordcloud_parameters.json'
 
-wordcloud1 = PJS_wordcloud(cmdline_dict, parameter_path = parameter_path)
-raw_word_list = wordcloud1.get_raw_word_list()
-word_frequency_dict = wordcloud1.get_word_frequency_dict(raw_word_list)
 
-wordcloud1.output_pic(word_frequency_dict.items())
-wordcloud1.write_sorted_tf_dict_to_file(word_frequency_dict)
+import shutil
+
+def delete_folder_files(folder):
+    for the_file in os.listdir(folder):
+        file_path = os.path.join(folder, the_file)
+        try:
+            if os.path.isfile(file_path):
+                os.unlink(file_path)
+            #elif os.path.isdir(file_path): shutil.rmtree(file_path)
+        except Exception as e:
+            print(e)
+
+
+#
+current_path = os.path.dirname(os.path.abspath(__file__))
+month_list = ['_', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+input_folder = os.path.join(current_path, 'input_raw_txt')
+file_name_list = os.listdir(input_folder)
+# 
+
+
+# delete everything in result folder
+parent_folder = find_upper_level_folder_path(2)
+output_pic_folder = os.path.join(parent_folder, 'result', 'word_cloud')
+delete_folder_files(output_pic_folder)
+
+for file_name in file_name_list:
+    file_base_name = re.findall(r'([0-9]+)#', file_name)
+    if not file_base_name:
+        continue
+    else:
+        file_base_name = file_base_name[0]
+    month = month_list[int(file_base_name)]
+    # reset the output path
+
+    ## old code
+    wordcloud1 = PJS_wordcloud(cmdline_dict, parameter_path = parameter_path, doc_name = file_name[:-4])
+    
+    
+    wordcloud1.output_pic_path = os.path.join(output_pic_folder, month + '.png')
+    wordcloud1.sorted_dic_output_path = os.path.join(output_pic_folder, 'sorted_output_' + month + '.txt')
+    
+    raw_word_list = wordcloud1.get_raw_word_list()
+    word_frequency_dict = wordcloud1.get_word_frequency_dict(raw_word_list)
+    wordcloud1.output_pic(word_frequency_dict.items(), is_display = False)
+    wordcloud1.write_sorted_tf_dict_to_file(word_frequency_dict)
+    print("----------------------------------------------------------------------------")
+    print ("Built {} wordcloud successfully!".format(month))
+    #old code end
+#
+
+
         
         
 

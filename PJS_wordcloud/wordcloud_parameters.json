@@ -5,7 +5,7 @@
         "max_words": 800,
         "margin": 1,
         "font_path": "msyh.ttf",
-        "max_font_size": 78,
+        "max_font_size": 88,
         "scale" : 1,
         "background_color": "white"
     },
