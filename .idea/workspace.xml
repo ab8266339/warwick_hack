@@ -28,8 +28,8 @@
       <file leaf-file-name="emotion_detection.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/emotion_detection.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2555">
-              <caret line="268" column="67" lean-forward="true" selection-start-line="268" selection-start-column="67" selection-end-line="268" selection-end-column="67" />
+            <state relative-caret-position="503">
+              <caret line="192" column="52" lean-forward="true" selection-start-line="192" selection-start-column="52" selection-end-line="192" selection-end-column="52" />
               <folding>
                 <element signature="e#0#33#0" expanded="true" />
               </folding>
@@ -69,8 +69,8 @@
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="-144" />
-    <option name="y" value="29" />
+    <option name="x" value="104" />
+    <option name="y" value="3" />
     <option name="width" value="1932" />
     <option name="height" value="1050" />
   </component>
@@ -274,7 +274,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-144" y="29" width="1932" height="1050" extended-state="0" />
+    <frame x="104" y="3" width="1932" height="1050" extended-state="1" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2507837" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
@@ -322,8 +322,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/emotion_detection.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2555">
-          <caret line="268" column="67" lean-forward="true" selection-start-line="268" selection-start-column="67" selection-end-line="268" selection-end-column="67" />
+        <state relative-caret-position="503">
+          <caret line="192" column="52" lean-forward="true" selection-start-line="192" selection-start-column="52" selection-end-line="192" selection-end-column="52" />
           <folding>
             <element signature="e#0#33#0" expanded="true" />
           </folding>
