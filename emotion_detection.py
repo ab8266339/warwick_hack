@@ -120,15 +120,12 @@ class EmotionDetection:
         # ::: get_photo_emotion_dict
         photo_folder_list = os.listdir(self.face_folder_path)
         photo_folder_list = [os.path.join(self.face_folder_path, x) for x in photo_folder_list]
-        print ("photo_folder_list", photo_folder_list)
+        #print ("photo_folder_list", photo_folder_list)
         for photo_file_path in photo_folder_list:
             # days_ago =
             f = open(photo_file_path, 'rb')
             # Return Exif tags
             tags = exifread.process_file(f)
-            print (type(tags))
-            print(tags)
-            print(tags.keys())
             try:
                 date_of_photo = tags['EXIF DateTimeDigitized']
             except KeyError:
@@ -149,12 +146,12 @@ class EmotionDetection:
 
             photo_emotion_dict = self.get_emotion_dict(photo_file_path)
             if photo_emotion_dict:
-                print ("photo_emotion_dict: ", photo_emotion_dict)
+                #print ("photo_emotion_dict: ", photo_emotion_dict)
                 photo_emotion_dict = photo_emotion_dict['scores']
             else:
                 continue
-            pp.pprint(photo_emotion_dict)
-            pp.pprint(type(photo_emotion_dict))
+            #pp.pprint(photo_emotion_dict)
+            #pp.pprint(type(photo_emotion_dict))
 
             if self.date_photo_emotion_dict[date_of_photo]['dict']:
                 self.date_photo_emotion_dict[date_of_photo]['dict'] = add_dicts_value(
@@ -170,7 +167,7 @@ class EmotionDetection:
             for emotion, emotion_value in self.date_photo_emotion_dict[date]['dict'].items():
                 emotion_value /= dict_num
                 self.date_photo_emotion_dict[date]['dict'][emotion] = float("{:.3f}".format(emotion_value))
-        pp.pprint(self.date_photo_emotion_dict)
+        #pp.pprint(self.date_photo_emotion_dict)
 
 
 
@@ -180,9 +177,10 @@ class EmotionDetection:
         texts_name_list = os.listdir(self.text_folder_path)
         texts_path_list = [os.path.join(self.text_folder_path, x) for x in texts_name_list]
         for text_file in texts_path_list:
+            print("processing {}....".format(text_file))
             with open(text_file, 'r', encoding = 'utf-8') as f:
                 date_str = re.findall(r'([0-9]+-[0-9]+-[0-9]+)#', f.name)[0]
-                print ("date_str :", date_str)
+                #print ("date_str :", date_str)
                 date_of_text_temp = time.strptime(date_str, '%Y-%m-%d')
                 date_of_text = datetime.datetime(*date_of_text_temp[:3])
                 date_object = datetime.date(year=date_of_text.year, month=date_of_text.month,
@@ -203,17 +201,17 @@ class EmotionDetection:
                                         },
                                         data = request_dict
                                         )
-                print(response.status_code)
+                print("status_code: ", response.status_code)
                 response_dict = response.json()['probability']
                 response_dict['emotion_value'] = response_dict['pos'] - response_dict['neg']
-                print(response_dict)
+                #print(response_dict)
                 if self.date_text_emotion_dict[date_object]:
                     logger1.error("{} has mutilple copies".format(date_object))
                 self.date_text_emotion_dict[date_object] = response_dict
                 # add raw txt data to dict and create new file
                 self.raw_data_dict[date_object].append(text_content)
 
-        pp.pprint(self.date_text_emotion_dict)
+        #pp.pprint(self.date_text_emotion_dict)
 
 
     def get_month_data_dict(self):
@@ -267,16 +265,18 @@ class EmotionDetection:
                 surprise_list.append(date_dict['dict']['surprise'])
 
             # plot
-            plt.plot(date_list, anger_list, 'bo', label="anger")
-            plt.plot(date_list, contempt_list, 'gx', label="contempt")
-            plt.plot(date_list, disgust_list, 'rx', label="disgust")
-            plt.plot(date_list, fear_list, 'co', label="fear")
-            plt.plot(date_list, happiness_list, 'mo', label="happiness")
-            plt.plot(date_list, neutral_list, 'yx', label="neutral")
-            plt.plot(date_list, sadness_list, 'ko', label="sadness")
-            plt.plot(date_list, surprise_list, 'wx', label="surprise")
+            print ("anger_list: ", anger_list)
+            plt.plot(date_list, anger_list, 'rx', label="anger")
+            #plt.plot(date_list, contempt_list, 'gx', label="contempt")
+            #plt.plot(date_list, disgust_list, 'rx', label="disgust")
+            plt.plot(date_list, fear_list, 'kx', label="fear")
+            plt.plot(date_list, happiness_list, 'yo', label="happiness")
+            #plt.plot(date_list, neutral_list, 'yx', label="neutral")
+            plt.plot(date_list, sadness_list, 'bo', label="sadness")
+            plt.plot(date_list, surprise_list, 'co', label="surprise")
             plt.title('Photo Emotion Trend')
-            plt.legend(loc=2)
+            #plt.legend(loc=2)
+            #plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
             plt.gcf().autofmt_xdate()
             path = os.path.join("result", 'photo_emotion_trend.png')
             plt.savefig(path)
@@ -286,7 +286,20 @@ class EmotionDetection:
             date_list = [x[0] for x in sorted_date_text_emotion_list]
             emotion_value_list = [x[1]['emotion_value'] for x in sorted_date_text_emotion_list]
             emotion_value_list = [float("{:.2f}".format(x)) for x in emotion_value_list]
-            plt.plot(date_list, emotion_value_list, 'ro', label="degree of pos/neg")
+            pos_emotion_value_list = []
+            pos_emotion_x_list = []
+            neg_emotion_value_list = []
+            neg_emotion_x_list = []
+            for i, x in enumerate(emotion_value_list):
+                if x >= 0:
+                    pos_emotion_value_list.append(x)
+                    pos_emotion_x_list.append(date_list[i])
+            for i, x in enumerate(emotion_value_list):
+                if x < 0:
+                    neg_emotion_value_list.append(x)
+                    neg_emotion_x_list.append(date_list[i])
+            plt.plot(pos_emotion_x_list, pos_emotion_value_list, 'go', label="degree of pos")
+            plt.plot(neg_emotion_x_list, neg_emotion_value_list, 'ro', label="degree of neg")
             plt.title('Text Emotion Trend')
             plt.legend(loc=2)
             plt.gcf().autofmt_xdate()
